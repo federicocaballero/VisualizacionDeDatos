@@ -2,24 +2,33 @@
 
 try {
 
-    $conexion = new PDO("mysql:host=localhost;port=3306;dbname=prueba_bd", "root", "");
+    $conexion = new PDO("mysql:host=localhost;port=3306;dbname=cursograficos_db", "root", "");
     $conexion->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     $conexion->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_WARNING);
 
-    $res = $conexion->query('SELECT * FROM usuarios') or die(print($conexion->errorInfo()));
+    //Hace la consulta a la base de datos con los datos que quiero traer
+    $res = $conexion->query('SELECT e.nombre, COUNT(o.OrderID) as cant_ventas
+    FROM empleados e
+    LEFT JOIN orden o ON e.empleadoID = o.IDempleado
+    LEFT JOIN ordendetalle od ON o.OrderID = od.IDorden
+    GROUP BY e.empleadoID, e.nombre') or die(print($conexion->errorInfo()));
 
+    //inicializa un array vacio para cargarlo luego con los datos
     $data = [];
 
+    //Recorre el array recibido de la consulta y va llenando el array data con 
+    //los datos que nos interesan
     while($item = $res->fetch(PDO::FETCH_OBJ)) {
 
         $data[] = [
-            'id' => $item->id,
+            //'ID' => $item->productoID,
             'nombre' => $item->nombre,
-            'cant_ventas' => $item->cant_ventas
+            'cant_ventas' => $item->cant_ventas,
         ];
 
     }
-
+    //a la respuesta que recibe (array de elementos en data) lo
+    //convierte en json
     echo json_encode($data);
 
 } catch(PDOException $error) {
